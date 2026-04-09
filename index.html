@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Канбан доска | Ученики + задачи | Atomic Hearts</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="kanban-container">
+        <div class="game-header">
+            <div class="title-section">
+                <h1>🎀  Pick me Сердечки · Канбан-доска</h1>
+                <p>Управление проектом | Назначение учеников на задачи</p>
+            </div>
+            <div class="stats-badge" id="globalStats">
+                To Do <span id="todoCount">0</span> | In Progress <span id="inprogCount">0</span> | Done <span id="doneCount">0</span>
+            </div>
+        </div>
+
+        <!-- Блок с таймерами -->
+        <div class="timers-panel">
+            <div class="timer-card">
+                <div class="timer-label">⏱️ Общее время в In Progress</div>
+                <div class="timer-value" id="totalTimeDisplay">0 мин 0 сек</div>
+                <div class="timer-sub">С момента первой задачи в колонке</div>
+            </div>
+            <div class="timer-card">
+                <div class="timer-label">🔄 Среднее время</div>
+                <div class="timer-value" id="cycleTimeDisplay">0 мин 0 сек</div>
+                <div class="timer-sub">Среднее время выполнения задачи</div>
+            </div>
+            <div class="timer-card">
+                <div class="timer-label">📊 Завершено задач</div>
+                <div class="timer-value" id="completedTasksCount">0</div>
+                <div class="timer-sub">Всего выполнено</div>
+            </div>
+        </div>
+
+        <!-- Канбан-доска -->
+        <div class="kanban-board" id="kanbanBoard">
+            <!-- Колонка To Do -->
+            <div class="column todo" data-status="todo">
+                <div class="column-header">
+                    <div class="column-title">
+                        <span class="emoji">📋</span> To Do
+                        <div class="wip-control">
+                            <span>WIP:</span>
+                            <input type="number" class="wip-limit-input" data-column="todo" min="1" max="30" value="10">
+                            <button class="set-wip-btn" data-column="todo">✓</button>
+                        </div>
+                    </div>
+                    <div class="task-count" id="todoCountBadge">0</div>
+                </div>
+                <div class="task-list" id="todoList" data-status="todo"></div>
+                <div class="add-task-panel">
+                    <input type="text" placeholder="Новая задача..." id="todoInput" autocomplete="off">
+                    <button class="add-btn" data-column="todo">+ Добавить</button>
+                </div>
+                <div class="wip-warning" id="todoWipWarning" style="display:none;"></div>
+            </div>
+
+            <!-- Колонка In Progress -->
+            <div class="column inprogress" data-status="inprogress">
+                <div class="column-header">
+                    <div class="column-title">
+                        <span class="emoji">⚙️</span> In Progress
+                        <div class="wip-control">
+                            <span>WIP:</span>
+                            <input type="number" class="wip-limit-input" data-column="inprogress" min="1" max="30" value="3">
+                            <button class="set-wip-btn" data-column="inprogress">✓</button>
+                        </div>
+                    </div>
+                    <div class="task-count" id="inprogCountBadge">0</div>
+                </div>
+                <div class="task-list" id="inprogressList" data-status="inprogress"></div>
+                <div class="add-task-panel">
+                    <input type="text" placeholder="Новая задача..." id="inprogressInput" autocomplete="off">
+                    <button class="add-btn" data-column="inprogress">+ Добавить</button>
+                </div>
+                <div class="wip-warning" id="inprogressWipWarning" style="display:none;"></div>
+            </div>
+
+            <!-- Колонка Done -->
+            <div class="column done" data-status="done">
+                <div class="column-header">
+                    <div class="column-title">
+                        <span class="emoji">✅</span> Done
+                        <div class="wip-control">
+                            <span>WIP:</span>
+                            <input type="number" class="wip-limit-input" data-column="done" min="1" max="30" value="10">
+                            <button class="set-wip-btn" data-column="done">✓</button>
+                        </div>
+                    </div>
+                    <div class="task-count" id="doneCountBadge">0</div>
+                </div>
+                <div class="task-list" id="doneList" data-status="done"></div>
+                <div class="add-task-panel">
+                    <input type="text" placeholder="Новая задача..." id="doneInput" autocomplete="off">
+                    <button class="add-btn" data-column="done">+ Добавить</button>
+                </div>
+                <div class="wip-warning" id="doneWipWarning" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Панель импорта задач -->
+        <div class="import-panel">
+            <div class="import-header" id="toggleImportHeader" style="cursor: pointer;">
+                <span>📥 Импорт задач из Excel / Google Sheets</span>
+                <button id="toggleImportBtn" class="toggle-import-btn">▼ Показать</button>
+            </div>
+            <div id="importContent" class="import-content" style="display: none;">
+                <div class="import-methods">
+                    <div class="import-method">
+                        <h4>📁 Загрузить файл задач</h4>
+                        <input type="file" id="excelFileInput" accept=".csv, .xlsx, .xls, .txt">
+                        <p class="import-hint">Формат: одна строка = одна задача</p>
+                    </div>
+                    
+                    <div class="import-method">
+                        <h4>📋 Вставить список задач</h4>
+                        <textarea id="pasteData" rows="4" placeholder='Название задачи 1&#10;Название задачи 2&#10;Название задачи 3'></textarea>
+                        <button id="pasteImportBtn" class="import-btn">➕ Импортировать задачи</button>
+                    </div>
+                    
+                    <div class="import-method">
+                        <h4>📚 Пример задач</h4>
+                        <button id="loadExampleBtn" class="import-btn secondary">📖 Загрузить пример</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Панель импорта учеников -->
+        <div class="import-panel students-panel">
+            <div class="import-header" id="toggleStudentsHeader" style="cursor: pointer;">
+                <span>👨‍🎓 Список учеников</span>
+                <button id="toggleStudentsBtn" class="toggle-import-btn">▼ Показать</button>
+            </div>
+            <div id="studentsContent" class="import-content" style="display: none;">
+                <div class="import-methods">
+                    <div class="import-method">
+                        <h4>📁 Загрузить файл с учениками</h4>
+                        <input type="file" id="studentsFileInput" accept=".csv, .xlsx, .xls, .txt">
+                        <p class="import-hint">Формат: ФИО ученика (каждый с новой строки)</p>
+                    </div>
+                    
+                    <div class="import-method">
+                        <h4>📋 Вставить список учеников</h4>
+                        <textarea id="studentsData" rows="4" placeholder='Иванов Иван Иванович&#10;Петрова Мария Сергеевна&#10;Сидоров Алексей Дмитриевич'></textarea>
+                        <button id="studentsImportBtn" class="import-btn">👥 Импортировать учеников</button>
+                    </div>
+                    
+                    <div class="import-method">
+                        <h4>📚 Текущие ученики</h4>
+                        <div id="studentsList" class="students-list"></div>
+                        <button id="clearStudentsBtn" class="import-btn secondary">🗑 Очистить список</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+    </div>
+
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
