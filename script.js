@@ -47,7 +47,7 @@ function loadAllData() {
         tasks.todo = allTasks.map(task => ({
             id: task.id,
             text: task.text,
-            student: task.student || null,
+            student: null,
             startTime: null,
             cycleTime: null
         }));
@@ -189,6 +189,7 @@ function showGlobalMessage(message, color = '#c44569') {
             background: ${color}; color: white; padding: 12px 20px;
             border-radius: 30px; font-size: 0.9rem; z-index: 1000;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
         `;
         document.body.appendChild(msgDiv);
     } else {
@@ -196,7 +197,7 @@ function showGlobalMessage(message, color = '#c44569') {
         msgDiv.style.display = 'block';
     }
     msgDiv.innerHTML = message;
-    setTimeout(() => msgDiv.style.display = 'none', 3000);
+    setTimeout(() => msgDiv.style.display = 'none', 4000);
 }
 
 // ========== ИМПОРТ ==========
@@ -237,6 +238,19 @@ function importTasksToTodo(newTasks) {
         showGlobalMessage(`✅ Импортировано ${added} задач!`, '#4caf50');
     }
     return added;
+}
+
+function clearTasksFromTodo() {
+    if (tasks.todo.length === 0) {
+        showGlobalMessage('В колонке To Do нет задач для очистки!', '#c44569');
+        return;
+    }
+    
+    const count = tasks.todo.length;
+    tasks.todo = [];
+    renderBoard();
+    saveAllData();
+    showGlobalMessage(`🗑 Очищено ${count} задач из колонки To Do!`, '#4caf50');
 }
 
 function parseCSVLine(line) {
@@ -327,16 +341,6 @@ function importFromTextarea(type = 'tasks') {
     textarea.value = '';
 }
 
-function loadExampleData() {
-    importTasksToTodo([
-        'Изучить проектный треугольник',
-        'Разобрать модель Такмана',
-        'Написать определение информации',
-        'Создать схему информационной системы',
-        'Подготовить презентацию'
-    ]);
-}
-
 // ========== КАНБАН ==========
 
 function setWipLimit(column, newLimit) {
@@ -368,14 +372,6 @@ function showWarning(message) {
     }
 }
 
-function checkWipLimitBeforeAdd() {
-    if (tasks.inprogress.length >= wipLimitInProgress) {
-        showWarning(`Лимит In Progress: ${wipLimitInProgress}`);
-        return false;
-    }
-    return true;
-}
-
 function renderBoard() {
     renderTaskList(tasks.todo, document.getElementById('todoList'), 'todo');
     renderTaskList(tasks.inprogress, document.getElementById('inprogressList'), 'inprogress');
@@ -401,23 +397,25 @@ function renderTaskList(taskArray, container, status) {
         card.className = 'task-card';
         card.setAttribute('data-id', task.id);
         
-        // ТЕКСТ ЗАДАЧИ
+        // ПЛАШКА ДЛЯ ТЕКСТА ЗАДАЧИ
+        const textWrapper = document.createElement('div');
+        textWrapper.className = 'task-text-wrapper';
+        
         const textDiv = document.createElement('div');
         textDiv.className = 'task-text';
         textDiv.textContent = task.text;
+        textWrapper.appendChild(textDiv);
         
-        // Блок с обучающимся
-        const studentDiv = document.createElement('div');
-        studentDiv.className = 'task-student';
-        
-        // Строка: ФИО + кнопка (в один ряд)
-        const studentRow = document.createElement('div');
-        studentRow.className = 'student-row';
-        
-        const studentName = document.createElement('span');
+        // ФИО - просто текст
+        const studentName = document.createElement('div');
         studentName.className = 'student-name';
         studentName.textContent = task.student || '❌ Не назначен';
         
+        // Строка с кнопкой и таймером
+        const actionsRow = document.createElement('div');
+        actionsRow.className = 'actions-row';
+        
+        // Кнопка "Случайный"
         const randomBtn = document.createElement('button');
         randomBtn.className = 'random-student-btn';
         randomBtn.innerHTML = '🎲 Случайный';
@@ -432,33 +430,22 @@ function renderTaskList(taskArray, container, status) {
                 showGlobalMessage(`🎲 Назначен: ${newStudent}`, '#4caf50');
             }
         };
+        actionsRow.appendChild(randomBtn);
         
-        studentRow.appendChild(studentName);
-        studentRow.appendChild(randomBtn);
-        studentDiv.appendChild(studentRow);
-        
-        // Контейнер для таймера (выравнивание по правому краю)
-        const timerContainer = document.createElement('div');
-        timerContainer.className = 'timer-container';
-        
-        // Таймер для In Progress (показывает текущее время работы) - на строку ниже, справа
+        // Таймер для In Progress
         if (status === 'inprogress' && task.startTime) {
             const timerDiv = document.createElement('div');
             timerDiv.className = 'task-timer';
             timerDiv.innerHTML = `<span class="timer-icon">⏱️</span> <span class="task-timer-value">${formatTimeMinutes(Date.now() - task.startTime)}</span>`;
-            timerContainer.appendChild(timerDiv);
+            actionsRow.appendChild(timerDiv);
         }
         
-        // Cycle Time для Done (показывает время выполнения задачи) - на строку ниже, справа
+        // Cycle Time для Done
         if (status === 'done' && task.cycleTime) {
             const cycleDiv = document.createElement('div');
             cycleDiv.className = 'task-cycle';
             cycleDiv.innerHTML = `<span class="cycle-icon">✅</span> <span class="task-cycle-value">${formatTimeMinutes(task.cycleTime)}</span>`;
-            timerContainer.appendChild(cycleDiv);
-        }
-        
-        if (timerContainer.children.length > 0) {
-            studentDiv.appendChild(timerContainer);
+            actionsRow.appendChild(cycleDiv);
         }
         
         // Кнопки действий
@@ -503,8 +490,9 @@ function renderTaskList(taskArray, container, status) {
         actionsDiv.appendChild(btnsDiv);
         actionsDiv.appendChild(del);
         
-        card.appendChild(textDiv);
-        card.appendChild(studentDiv);
+        card.appendChild(textWrapper);
+        card.appendChild(studentName);
+        card.appendChild(actionsRow);
         card.appendChild(actionsDiv);
         
         card.onclick = (e) => {
@@ -517,34 +505,53 @@ function renderTaskList(taskArray, container, status) {
         container.appendChild(card);
     });
 }
+
+// ГЛАВНАЯ ФУНКЦИЯ ПЕРЕМЕЩЕНИЯ - С АВТОМАТИЧЕСКИМ НАЗНАЧЕНИЕМ
 function moveTask(taskId, from, to) {
     const idx = tasks[from].findIndex(t => t.id === taskId);
     if (idx === -1) return false;
     const task = tasks[from][idx];
     
+    // Проверка WIP лимита при перемещении в In Progress
     if (to === 'inprogress' && tasks.inprogress.length >= wipLimitInProgress) {
         showWarning(`Лимит In Progress: ${wipLimitInProgress}. Невозможно добавить задачу!`);
         return false;
     }
     
+    // При перемещении в In Progress
     if (to === 'inprogress' && !task.startTime) {
+        // Запускаем таймер
         task.startTime = Date.now();
+        
+        // Запускаем общий таймер проекта, если ещё не запущен
         if (!isTimerRunning && !isProjectCompleted && totalStartTime === null) {
             isTimerRunning = true;
             totalStartTime = Date.now();
             showGlobalMessage('⏱️ Таймер проекта запущен!', '#4caf50');
         }
+        
+        // АВТОМАТИЧЕСКОЕ НАЗНАЧЕНИЕ ОБУЧАЮЩЕГОСЯ
+        if (task.student === null) {
+            const randomStudent = getRandomStudent();
+            if (randomStudent) {
+                task.student = randomStudent;
+                showGlobalMessage(`👨‍🎓 На задачу "${task.text.substring(0, 35)}..." автоматически назначен ${randomStudent}`, '#4caf50');
+            }
+        }
     }
     
+    // При перемещении в Done - фиксируем время выполнения
     if (to === 'done' && task.startTime && !task.cycleTime) {
         task.cycleTime = Date.now() - task.startTime;
         completedTasksTimes.push(task.cycleTime);
-        showGlobalMessage(`✅ Задача выполнена за ${formatTimeMinutes(task.cycleTime)}!`, '#4caf50');
+        showGlobalMessage(`✅ Задача "${task.text.substring(0, 30)}..." выполнена за ${formatTimeMinutes(task.cycleTime)}!`, '#4caf50');
     }
     
+    // Выполняем перемещение
     tasks[from].splice(idx, 1);
     tasks[to].push(task);
     
+    // Проверяем, все ли задачи выполнены
     if (areAllTasksCompleted() && isTimerRunning) {
         isTimerRunning = false;
         isProjectCompleted = true;
@@ -571,15 +578,28 @@ function deleteTaskById(taskId) {
 }
 
 function updateCounters() {
-    const counts = { todo: tasks.todo.length, inprogress: tasks.inprogress.length, done: tasks.done.length };
-    ['todo', 'inprogress', 'done'].forEach(s => {
-        const el = document.getElementById(`${s}Count`);
-        const badge = document.getElementById(`${s}CountBadge`);
-        if (el) el.innerText = counts[s];
-        if (badge) badge.innerText = counts[s];
-    });
-    const stats = document.getElementById('globalStats');
-    if (stats) stats.innerHTML = `To Do <span id="todoCount">${counts.todo}</span> | In Progress <span id="inprogCount">${counts.inprogress}</span> | Done <span id="doneCount">${counts.done}</span>`;
+    const totalTasks = tasks.todo.length + tasks.inprogress.length + tasks.done.length;
+    
+    const todoBadge = document.getElementById('todoCountBadge');
+    const inprogBadge = document.getElementById('inprogCountBadge');
+    const doneBadge = document.getElementById('doneCountBadge');
+    
+    if (todoBadge) todoBadge.innerText = `${tasks.todo.length} / ${totalTasks}`;
+    if (inprogBadge) inprogBadge.innerText = `${tasks.inprogress.length} / ${totalTasks}`;
+    if (doneBadge) doneBadge.innerText = `${tasks.done.length} / ${totalTasks}`;
+    
+    const todoCountSpan = document.getElementById('todoCount');
+    const inprogCountSpan = document.getElementById('inprogCount');
+    const doneCountSpan = document.getElementById('doneCount');
+    
+    if (todoCountSpan) todoCountSpan.innerText = tasks.todo.length;
+    if (inprogCountSpan) inprogCountSpan.innerText = tasks.inprogress.length;
+    if (doneCountSpan) doneCountSpan.innerText = tasks.done.length;
+    
+    const globalStats = document.getElementById('globalStats');
+    if (globalStats) {
+        globalStats.innerHTML = `To Do <span id="todoCount">${tasks.todo.length}</span> | In Progress <span id="inprogCount">${tasks.inprogress.length}</span> | Done <span id="doneCount">${tasks.done.length}</span>`;
+    }
 }
 
 function addTaskToColumn(status, text) {
@@ -606,7 +626,7 @@ function init() {
     updateStudentsListDisplay();
     renderBoard();
     
-    // Только кнопка добавления для To Do
+    // Кнопка добавления для To Do
     const addBtn = document.querySelector('.add-btn');
     const todoInput = document.getElementById('todoInput');
     if (addBtn && todoInput) {
@@ -624,7 +644,7 @@ function init() {
         };
     }
     
-    // WIP лимит только для In Progress
+    // WIP лимит
     const setWipBtn = document.querySelector('.set-wip-btn');
     const wipInput = document.querySelector('.wip-limit-input');
     if (setWipBtn && wipInput) {
@@ -637,6 +657,7 @@ function init() {
     }
     updateWipDisplay();
     
+    // Панели импорта
     const toggleImport = document.getElementById('toggleImportBtn');
     const importContent = document.getElementById('importContent');
     if (toggleImport && importContent) {
@@ -657,15 +678,32 @@ function init() {
         };
     }
     
+    // Кнопки импорта задач
     document.getElementById('pasteImportBtn')?.addEventListener('click', () => importFromTextarea('tasks'));
-    document.getElementById('studentsImportBtn')?.addEventListener('click', () => importFromTextarea('students'));
-    document.getElementById('loadExampleBtn')?.addEventListener('click', loadExampleData);
-    document.getElementById('clearStudentsBtn')?.addEventListener('click', () => { students = []; updateStudentsListDisplay(); saveAllData(); showGlobalMessage('Список обучающихся очищен!'); });
     document.getElementById('excelFileInput')?.addEventListener('change', e => { if(e.target.files[0]) handleFileUpload(e.target.files[0], 'tasks'); e.target.value = ''; });
+    
+    // Кнопка очистки задач (без подтверждения)
+    const clearTasksBtn = document.getElementById('clearTasksBtn');
+    if (clearTasksBtn) {
+        clearTasksBtn.addEventListener('click', () => {
+            clearTasksFromTodo();
+        });
+    }
+    
+    // Кнопки импорта обучающихся
+    document.getElementById('studentsImportBtn')?.addEventListener('click', () => importFromTextarea('students'));
     document.getElementById('studentsFileInput')?.addEventListener('change', e => { if(e.target.files[0]) handleFileUpload(e.target.files[0], 'students'); e.target.value = ''; });
     
+    // Кнопка очистки списка обучающихся (без подтверждения)
+    document.getElementById('clearStudentsBtn')?.addEventListener('click', () => { 
+        students = []; 
+        updateStudentsListDisplay(); 
+        saveAllData(); 
+        showGlobalMessage('Список обучающихся очищен!', '#c44569');
+    });
+    
     console.log('✅ Канбан-доска готова!');
-    console.log('📌 Добавление задач только в колонку To Do');
+    console.log('📌 При перемещении задачи в In Progress автоматически назначается случайный обучающийся');
 }
 
 window.clearAllData = clearAllData;
