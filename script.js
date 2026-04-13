@@ -4,12 +4,8 @@ const STORAGE_KEYS = {
     STUDENTS: 'kanban_students'
 };
 
-// Хранилище WIP лимитов
-let wipLimits = {
-    todo: 10,
-    inprogress: 3,
-    done: 10
-};
+// Хранилище WIP лимитов (только для In Progress)
+let wipLimitInProgress = 3;
 
 // Данные для таймеров
 let totalStartTime = null;
@@ -19,7 +15,7 @@ let timerInterval = null;
 let isTimerRunning = false;
 let isProjectCompleted = false;
 
-// Список учеников
+// Список обучающихся
 let students = [];
 
 // Задачи
@@ -34,7 +30,7 @@ let tasks = {
 function saveAllData() {
     localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
     localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students));
-    console.log('✅ Задачи и ученики сохранены');
+    console.log('✅ Задачи и обучающиеся сохранены');
 }
 
 function loadAllData() {
@@ -51,7 +47,7 @@ function loadAllData() {
         tasks.todo = allTasks.map(task => ({
             id: task.id,
             text: task.text,
-            student: null,
+            student: task.student || null,
             startTime: null,
             cycleTime: null
         }));
@@ -74,7 +70,7 @@ function loadAllData() {
     const savedStudents = localStorage.getItem(STORAGE_KEYS.STUDENTS);
     if (savedStudents) {
         students = JSON.parse(savedStudents);
-        console.log('👨‍🎓 Ученики загружены');
+        console.log('👨‍🎓 Обучающиеся загружены');
     } else {
         students = [
             'Иванов Иван Иванович',
@@ -177,7 +173,7 @@ function updateStudentsListDisplay() {
 
 function getRandomStudent() {
     if (students.length === 0) {
-        showGlobalMessage('Сначала добавьте учеников в список!', '#c44569');
+        showGlobalMessage('Сначала добавьте обучающихся в список!', '#c44569');
         return null;
     }
     return students[Math.floor(Math.random() * students.length)];
@@ -211,13 +207,13 @@ function importStudents(studentList) {
         if (student && student.trim()) newStudents.push(student.trim());
     }
     if (newStudents.length === 0) {
-        showGlobalMessage('Не найдено учеников!', '#c44569');
+        showGlobalMessage('Не найдено обучающихся!', '#c44569');
         return false;
     }
     students = newStudents;
     updateStudentsListDisplay();
     saveAllData();
-    showGlobalMessage(`✅ Импортировано ${students.length} учеников!`, '#4caf50');
+    showGlobalMessage(`✅ Импортировано ${students.length} обучающихся!`, '#4caf50');
     return true;
 }
 
@@ -344,26 +340,27 @@ function loadExampleData() {
 // ========== КАНБАН ==========
 
 function setWipLimit(column, newLimit) {
+    if (column !== 'inprogress') return;
     const limit = parseInt(newLimit);
     if (isNaN(limit)) return false;
-    wipLimits[column] = Math.min(30, Math.max(1, limit));
-    updateWipDisplay(column);
+    wipLimitInProgress = Math.min(30, Math.max(1, limit));
+    updateWipDisplay();
     
-    if (tasks[column].length > wipLimits[column]) {
-        const excess = tasks[column].splice(-(tasks[column].length - wipLimits[column]));
+    if (tasks.inprogress.length > wipLimitInProgress) {
+        const excess = tasks.inprogress.splice(-(tasks.inprogress.length - wipLimitInProgress));
         tasks.todo.unshift(...excess);
         renderBoard();
     }
     return true;
 }
 
-function updateWipDisplay(column) {
-    const input = document.querySelector(`.wip-limit-input[data-column="${column}"]`);
-    if (input && input.value != wipLimits[column]) input.value = wipLimits[column];
+function updateWipDisplay() {
+    const input = document.querySelector('.wip-limit-input');
+    if (input && input.value != wipLimitInProgress) input.value = wipLimitInProgress;
 }
 
-function showWarning(column, message) {
-    const warning = document.getElementById(`${column}WipWarning`);
+function showWarning(message) {
+    const warning = document.getElementById('inprogressWipWarning');
     if (warning) {
         warning.innerHTML = `⚠️ ${message}`;
         warning.style.display = 'block';
@@ -371,10 +368,9 @@ function showWarning(column, message) {
     }
 }
 
-function checkWipLimitBeforeAdd(column) {
-    if (tasks[column].length >= wipLimits[column]) {
-        const name = column === 'todo' ? 'To Do' : column === 'inprogress' ? 'In Progress' : 'Done';
-        showWarning(column, `Лимит ${name}: ${wipLimits[column]}`);
+function checkWipLimitBeforeAdd() {
+    if (tasks.inprogress.length >= wipLimitInProgress) {
+        showWarning(`Лимит In Progress: ${wipLimitInProgress}`);
         return false;
     }
     return true;
@@ -405,16 +401,21 @@ function renderTaskList(taskArray, container, status) {
         card.className = 'task-card';
         card.setAttribute('data-id', task.id);
         
+        // ТЕКСТ ЗАДАЧИ
         const textDiv = document.createElement('div');
         textDiv.className = 'task-text';
         textDiv.textContent = task.text;
         
+        // Блок с обучающимся
         const studentDiv = document.createElement('div');
         studentDiv.className = 'task-student';
         
+        // Строка: ФИО + кнопка (в один ряд)
+        const studentRow = document.createElement('div');
+        studentRow.className = 'student-row';
+        
         const studentName = document.createElement('span');
         studentName.className = 'student-name';
-        // Показываем только если есть ученик
         studentName.textContent = task.student || '❌ Не назначен';
         
         const randomBtn = document.createElement('button');
@@ -432,16 +433,35 @@ function renderTaskList(taskArray, container, status) {
             }
         };
         
-        studentDiv.appendChild(studentName);
-        studentDiv.appendChild(randomBtn);
+        studentRow.appendChild(studentName);
+        studentRow.appendChild(randomBtn);
+        studentDiv.appendChild(studentRow);
         
+        // Контейнер для таймера (выравнивание по правому краю)
+        const timerContainer = document.createElement('div');
+        timerContainer.className = 'timer-container';
+        
+        // Таймер для In Progress (показывает текущее время работы) - на строку ниже, справа
         if (status === 'inprogress' && task.startTime) {
             const timerDiv = document.createElement('div');
             timerDiv.className = 'task-timer';
-            timerDiv.innerHTML = `⏱️ <span class="task-timer-value">${formatTimeMinutes(Date.now() - task.startTime)}</span>`;
-            studentDiv.appendChild(timerDiv);
+            timerDiv.innerHTML = `<span class="timer-icon">⏱️</span> <span class="task-timer-value">${formatTimeMinutes(Date.now() - task.startTime)}</span>`;
+            timerContainer.appendChild(timerDiv);
         }
         
+        // Cycle Time для Done (показывает время выполнения задачи) - на строку ниже, справа
+        if (status === 'done' && task.cycleTime) {
+            const cycleDiv = document.createElement('div');
+            cycleDiv.className = 'task-cycle';
+            cycleDiv.innerHTML = `<span class="cycle-icon">✅</span> <span class="task-cycle-value">${formatTimeMinutes(task.cycleTime)}</span>`;
+            timerContainer.appendChild(cycleDiv);
+        }
+        
+        if (timerContainer.children.length > 0) {
+            studentDiv.appendChild(timerContainer);
+        }
+        
+        // Кнопки действий
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'task-actions';
         
@@ -473,13 +493,6 @@ function renderTaskList(taskArray, container, status) {
             back.innerHTML = '← In Progress';
             back.onclick = (e) => { e.stopPropagation(); moveTask(task.id, 'done', 'inprogress'); };
             btnsDiv.appendChild(back);
-            
-            if (task.cycleTime) {
-                const cycle = document.createElement('span');
-                cycle.className = 'task-cycle-badge';
-                cycle.innerHTML = `✅ ${formatTimeMinutes(task.cycleTime)}`;
-                btnsDiv.appendChild(cycle);
-            }
         }
         
         const del = document.createElement('button');
@@ -504,15 +517,13 @@ function renderTaskList(taskArray, container, status) {
         container.appendChild(card);
     });
 }
-
 function moveTask(taskId, from, to) {
     const idx = tasks[from].findIndex(t => t.id === taskId);
     if (idx === -1) return false;
     const task = tasks[from][idx];
     
-    if (tasks[to].length >= wipLimits[to]) {
-        const name = to === 'todo' ? 'To Do' : to === 'inprogress' ? 'In Progress' : 'Done';
-        showWarning(to, `Лимит ${name}: ${wipLimits[to]}`);
+    if (to === 'inprogress' && tasks.inprogress.length >= wipLimitInProgress) {
+        showWarning(`Лимит In Progress: ${wipLimitInProgress}. Невозможно добавить задачу!`);
         return false;
     }
     
@@ -521,14 +532,14 @@ function moveTask(taskId, from, to) {
         if (!isTimerRunning && !isProjectCompleted && totalStartTime === null) {
             isTimerRunning = true;
             totalStartTime = Date.now();
-            showGlobalMessage('⏱️ Таймер запущен!', '#4caf50');
+            showGlobalMessage('⏱️ Таймер проекта запущен!', '#4caf50');
         }
     }
     
     if (to === 'done' && task.startTime && !task.cycleTime) {
         task.cycleTime = Date.now() - task.startTime;
         completedTasksTimes.push(task.cycleTime);
-        showGlobalMessage(`✅ Выполнено за ${formatTimeMinutes(task.cycleTime)}!`, '#4caf50');
+        showGlobalMessage(`✅ Задача выполнена за ${formatTimeMinutes(task.cycleTime)}!`, '#4caf50');
     }
     
     tasks[from].splice(idx, 1);
@@ -538,7 +549,7 @@ function moveTask(taskId, from, to) {
         isTimerRunning = false;
         isProjectCompleted = true;
         finalTotalTime = Date.now() - totalStartTime;
-        showGlobalMessage(`🏆 Проект завершён за ${formatTimeMinutes(finalTotalTime)}!`, '#4caf50');
+        showGlobalMessage(`🏆 Проект завершён! Общее время: ${formatTimeMinutes(finalTotalTime)}`, '#4caf50');
     }
     
     renderBoard();
@@ -573,9 +584,9 @@ function updateCounters() {
 
 function addTaskToColumn(status, text) {
     if (!text || !text.trim()) return false;
-    if (!checkWipLimitBeforeAdd(status)) return false;
+    if (status !== 'todo') return false;
     
-    tasks[status].push({
+    tasks.todo.push({
         id: generateId(),
         text: text.trim(),
         student: null,
@@ -595,29 +606,36 @@ function init() {
     updateStudentsListDisplay();
     renderBoard();
     
-    document.querySelectorAll('.add-btn').forEach(btn => {
-        btn.onclick = () => {
-            const col = btn.dataset.column;
-            const input = document.getElementById(`${col}Input`);
-            if (input && input.value) {
-                addTaskToColumn(col, input.value);
-                input.value = '';
+    // Только кнопка добавления для To Do
+    const addBtn = document.querySelector('.add-btn');
+    const todoInput = document.getElementById('todoInput');
+    if (addBtn && todoInput) {
+        addBtn.onclick = () => {
+            if (todoInput.value) {
+                addTaskToColumn('todo', todoInput.value);
+                todoInput.value = '';
             }
         };
-    });
-    
-    ['todo', 'inprogress', 'done'].forEach(col => {
-        const input = document.getElementById(`${col}Input`);
-        if (input) input.onkeypress = e => { if (e.key === 'Enter') { addTaskToColumn(col, input.value); input.value = ''; } };
-    });
-    
-    document.querySelectorAll('.set-wip-btn').forEach(btn => {
-        btn.onclick = () => {
-            const col = btn.dataset.column;
-            const input = document.querySelector(`.wip-limit-input[data-column="${col}"]`);
-            if (input) setWipLimit(col, input.value);
+        todoInput.onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                addTaskToColumn('todo', todoInput.value);
+                todoInput.value = '';
+            }
         };
-    });
+    }
+    
+    // WIP лимит только для In Progress
+    const setWipBtn = document.querySelector('.set-wip-btn');
+    const wipInput = document.querySelector('.wip-limit-input');
+    if (setWipBtn && wipInput) {
+        setWipBtn.onclick = () => {
+            setWipLimit('inprogress', wipInput.value);
+        };
+        wipInput.onkeypress = (e) => {
+            if (e.key === 'Enter') setWipLimit('inprogress', wipInput.value);
+        };
+    }
+    updateWipDisplay();
     
     const toggleImport = document.getElementById('toggleImportBtn');
     const importContent = document.getElementById('importContent');
@@ -642,12 +660,12 @@ function init() {
     document.getElementById('pasteImportBtn')?.addEventListener('click', () => importFromTextarea('tasks'));
     document.getElementById('studentsImportBtn')?.addEventListener('click', () => importFromTextarea('students'));
     document.getElementById('loadExampleBtn')?.addEventListener('click', loadExampleData);
-    document.getElementById('clearStudentsBtn')?.addEventListener('click', () => { students = []; updateStudentsListDisplay(); saveAllData(); showGlobalMessage('Список учеников очищен!'); });
+    document.getElementById('clearStudentsBtn')?.addEventListener('click', () => { students = []; updateStudentsListDisplay(); saveAllData(); showGlobalMessage('Список обучающихся очищен!'); });
     document.getElementById('excelFileInput')?.addEventListener('change', e => { if(e.target.files[0]) handleFileUpload(e.target.files[0], 'tasks'); e.target.value = ''; });
     document.getElementById('studentsFileInput')?.addEventListener('change', e => { if(e.target.files[0]) handleFileUpload(e.target.files[0], 'students'); e.target.value = ''; });
     
     console.log('✅ Канбан-доска готова!');
-    console.log('📌 При перезагрузке ВСЕ задачи в To Do, ученики не привязаны до нажатия "Случайный"');
+    console.log('📌 Добавление задач только в колонку To Do');
 }
 
 window.clearAllData = clearAllData;
