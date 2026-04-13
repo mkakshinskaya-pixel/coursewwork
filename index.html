@@ -13,8 +13,11 @@
                 <h1>🎀 Pick me Сердечки · Канбан-доска</h1>
                 <p>Проверка сердечек | Назначение обучающихся на задачки</p>
             </div>
-            <div class="stats-badge" id="globalStats">
-                To Do <span id="todoCount">0</span> | In Progress <span id="inprogCount">0</span> | Done <span id="doneCount">0</span>
+            <div class="header-right">
+                <button id="themeToggleBtn" class="theme-toggle-btn">🌙 Фиолетовая тема</button>
+                <div class="stats-badge" id="globalStats">
+                    To Do <span id="todoCount">0</span> | In Progress <span id="inprogCount">0</span> | Done <span id="doneCount">0</span>
+                </div>
             </div>
         </div>
 
@@ -39,7 +42,6 @@
 
         <!-- Канбан-доска -->
         <div class="kanban-board" id="kanbanBoard">
-            <!-- Колонка To Do -->
             <div class="column todo" data-status="todo">
                 <div class="column-header">
                     <div class="column-title">
@@ -54,7 +56,6 @@
                 </div>
             </div>
 
-            <!-- Колонка In Progress -->
             <div class="column inprogress" data-status="inprogress">
                 <div class="column-header">
                     <div class="column-title">
@@ -71,7 +72,6 @@
                 <div class="wip-warning" id="inprogressWipWarning" style="display:none;"></div>
             </div>
 
-            <!-- Колонка Done -->
             <div class="column done" data-status="done">
                 <div class="column-header">
                     <div class="column-title">
@@ -91,29 +91,26 @@
             </div>
             <div id="importContent" class="import-content" style="display: none;">
                 <div class="import-methods">
-                    <!-- Карточка загрузки файла -->
                     <div class="import-method">
                         <h4>📁 Загрузить файл задач</h4>
                         <input type="file" id="excelFileInput" accept=".csv, .xlsx, .xls, .txt">
                         <p class="import-hint">Формат: одна строка = одна задача</p>
                     </div>
                     
-                    <!-- Карточка вставки текста -->
                     <div class="import-method">
                         <h4>📋 Вставить список задач</h4>
                         <textarea id="pasteData" rows="4" placeholder='Название задачи 1&#10;Название задачи 2&#10;Название задачи 3'></textarea>
                         <button id="pasteImportBtn" class="import-btn">➕ Импортировать задачи</button>
                     </div>
                     
-                    <!-- Карточка очистки задач -->
                     <div class="import-method">
                         <div class="clear-tasks-wrapper">
                             <h4>🗑 Очистить задачи</h4>
                             <div class="clear-tasks-info">
-                                <p style="font-size: 0.75rem; color: #c44569; margin-bottom: 8px;">
+                                <p style="font-size: 0.75rem; margin-bottom: 8px;">
                                     Удалить все задачи из колонки "To Do"
                                 </p>
-                                <p style="font-size: 0.7rem; color: #b76e79;">
+                                <p style="font-size: 0.7rem;">
                                     ⚠️ Внимание! Это действие нельзя отменить.
                                 </p>
                             </div>
@@ -132,21 +129,18 @@
             </div>
             <div id="studentsContent" class="import-content" style="display: none;">
                 <div class="import-methods">
-                    <!-- Карточка загрузки файла -->
                     <div class="import-method">
                         <h4>📁 Загрузить файл с обучающимися</h4>
                         <input type="file" id="studentsFileInput" accept=".csv, .xlsx, .xls, .txt">
                         <p class="import-hint">Формат: ФИО обучающегося (каждый с новой строки)</p>
                     </div>
                     
-                    <!-- Карточка вставки текста -->
                     <div class="import-method">
                         <h4>📋 Вставить список обучающихся</h4>
                         <textarea id="studentsData" rows="4" placeholder='Иванов Иван Иванович&#10;Петрова Мария Сергеевна&#10;Сидоров Алексей Дмитриевич'></textarea>
                         <button id="studentsImportBtn" class="import-btn">👥 Импортировать обучающихся</button>
                     </div>
                     
-                    <!-- Карточка текущих обучающихся -->
                     <div class="import-method">
                         <div class="students-wrapper">
                             <h4>📚 Текущие обучающиеся</h4>
@@ -156,7 +150,7 @@
                     </div>
                 </div>
             </div>
-        
+       
 
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="script.js"></script>

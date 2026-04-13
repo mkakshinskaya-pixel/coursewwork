@@ -1,7 +1,8 @@
 // Ключи для localStorage
 const STORAGE_KEYS = {
     TASKS: 'kanban_tasks',
-    STUDENTS: 'kanban_students'
+    STUDENTS: 'kanban_students',
+    THEME: 'kanban_theme'
 };
 
 // Хранилище WIP лимитов (только для In Progress)
@@ -83,7 +84,48 @@ function loadAllData() {
 function clearAllData() {
     localStorage.removeItem(STORAGE_KEYS.TASKS);
     localStorage.removeItem(STORAGE_KEYS.STUDENTS);
+    localStorage.removeItem(STORAGE_KEYS.THEME);
     location.reload();
+}
+
+// ========== ФУНКЦИИ ДЛЯ РАБОТЫ С ТЕМОЙ ==========
+
+function initTheme() {
+    const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
+    const themeBtn = document.getElementById('themeToggleBtn');
+    
+    if (savedTheme === 'purple') {
+        document.body.classList.add('purple-theme');
+        if (themeBtn) themeBtn.innerHTML = '🌸 Розовая тема';
+    } else {
+        document.body.classList.remove('purple-theme');
+        if (themeBtn) themeBtn.innerHTML = '🟣 Фиолетовая тема';
+    }
+}
+
+function toggleTheme() {
+    const themeBtn = document.getElementById('themeToggleBtn');
+    
+    if (document.body.classList.contains('purple-theme')) {
+        document.body.classList.remove('purple-theme');
+        localStorage.setItem(STORAGE_KEYS.THEME, 'pink');
+        if (themeBtn) themeBtn.innerHTML = '🟣 Фиолетовая тема';
+        showGlobalMessage('🌸 Розовая тема активирована', '#e91e63');
+    } else {
+        document.body.classList.add('purple-theme');
+        localStorage.setItem(STORAGE_KEYS.THEME, 'purple');
+        if (themeBtn) themeBtn.innerHTML = '🌸 Розовая тема';
+        showGlobalMessage('🟣 Фиолетовая тема активирована', '#7c3aed');
+    }
+}
+
+// Функция для получения цвета уведомления в зависимости от темы
+function getNotificationColor() {
+    if (document.body.classList.contains('purple-theme')) {
+        return '#a855f7';
+    } else {
+        return '#f48fb1';
+    }
 }
 
 // ========== ОСТАЛЬНЫЕ ФУНКЦИИ ==========
@@ -173,30 +215,32 @@ function updateStudentsListDisplay() {
 
 function getRandomStudent() {
     if (students.length === 0) {
-        showGlobalMessage('Сначала добавьте обучающихся в список!', '#c44569');
+        showGlobalMessage('Сначала добавьте обучающихся в список!', getNotificationColor());
         return null;
     }
     return students[Math.floor(Math.random() * students.length)];
 }
 
-function showGlobalMessage(message, color = '#c44569') {
+function showGlobalMessage(message, color) {
     let msgDiv = document.getElementById('globalMessage');
     if (!msgDiv) {
         msgDiv = document.createElement('div');
         msgDiv.id = 'globalMessage';
-        msgDiv.style.cssText = `
-            position: fixed; bottom: 20px; right: 20px;
-            background: ${color}; color: white; padding: 12px 20px;
-            border-radius: 30px; font-size: 0.9rem; z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            animation: slideIn 0.3s ease;
-        `;
         document.body.appendChild(msgDiv);
-    } else {
-        msgDiv.style.background = color;
-        msgDiv.style.display = 'block';
     }
+    
+    // Если цвет не передан, определяем по теме
+    const finalColor = color || getNotificationColor();
+    
+    msgDiv.style.cssText = `
+        position: fixed; bottom: 20px; right: 20px;
+        background: ${finalColor}; color: white; padding: 12px 20px;
+        border-radius: 30px; font-size: 0.9rem; z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        animation: slideIn 0.3s ease;
+    `;
     msgDiv.innerHTML = message;
+    msgDiv.style.display = 'block';
     setTimeout(() => msgDiv.style.display = 'none', 4000);
 }
 
@@ -208,7 +252,7 @@ function importStudents(studentList) {
         if (student && student.trim()) newStudents.push(student.trim());
     }
     if (newStudents.length === 0) {
-        showGlobalMessage('Не найдено обучающихся!', '#c44569');
+        showGlobalMessage('Не найдено обучающихся!', getNotificationColor());
         return false;
     }
     students = newStudents;
@@ -242,7 +286,7 @@ function importTasksToTodo(newTasks) {
 
 function clearTasksFromTodo() {
     if (tasks.todo.length === 0) {
-        showGlobalMessage('В колонке To Do нет задач для очистки!', '#c44569');
+        showGlobalMessage('В колонке To Do нет задач для очистки!', getNotificationColor());
         return;
     }
     
@@ -314,7 +358,7 @@ function importFromTextarea(type = 'tasks') {
     
     const raw = textarea.value;
     if (!raw.trim()) {
-        showGlobalMessage('Вставьте данные!', '#c44569');
+        showGlobalMessage('Вставьте данные!', getNotificationColor());
         return;
     }
     
@@ -332,7 +376,7 @@ function importFromTextarea(type = 'tasks') {
     });
     
     if (items.length === 0) {
-        showGlobalMessage('Нет данных для импорта!', '#c44569');
+        showGlobalMessage('Нет данных для импорта!', getNotificationColor());
         return;
     }
     
@@ -387,7 +431,7 @@ function renderTaskList(taskArray, container, status) {
     if (!taskArray.length) {
         const empty = document.createElement('div');
         empty.textContent = '✨ Нет задач';
-        empty.style.cssText = 'color:#f8bbd0; text-align:center; padding:20px 0; font-size:0.8rem';
+        empty.style.cssText = 'color:#c4b5fd; text-align:center; padding:20px 0; font-size:0.8rem';
         container.appendChild(empty);
         return;
     }
@@ -397,7 +441,6 @@ function renderTaskList(taskArray, container, status) {
         card.className = 'task-card';
         card.setAttribute('data-id', task.id);
         
-        // ПЛАШКА ДЛЯ ТЕКСТА ЗАДАЧИ
         const textWrapper = document.createElement('div');
         textWrapper.className = 'task-text-wrapper';
         
@@ -406,16 +449,13 @@ function renderTaskList(taskArray, container, status) {
         textDiv.textContent = task.text;
         textWrapper.appendChild(textDiv);
         
-        // ФИО - просто текст
         const studentName = document.createElement('div');
         studentName.className = 'student-name';
         studentName.textContent = task.student || '❌ Не назначен';
         
-        // Строка с кнопкой и таймером
         const actionsRow = document.createElement('div');
         actionsRow.className = 'actions-row';
         
-        // Кнопка "Случайный"
         const randomBtn = document.createElement('button');
         randomBtn.className = 'random-student-btn';
         randomBtn.innerHTML = '🎲 Случайный';
@@ -427,12 +467,11 @@ function renderTaskList(taskArray, container, status) {
                 studentName.textContent = task.student;
                 renderBoard();
                 saveAllData();
-                showGlobalMessage(`🎲 Назначен: ${newStudent}`, '#4caf50');
+                showGlobalMessage(`🎲 Назначен: ${newStudent}`, getNotificationColor());
             }
         };
         actionsRow.appendChild(randomBtn);
         
-        // Таймер для In Progress
         if (status === 'inprogress' && task.startTime) {
             const timerDiv = document.createElement('div');
             timerDiv.className = 'task-timer';
@@ -440,7 +479,6 @@ function renderTaskList(taskArray, container, status) {
             actionsRow.appendChild(timerDiv);
         }
         
-        // Cycle Time для Done
         if (status === 'done' && task.cycleTime) {
             const cycleDiv = document.createElement('div');
             cycleDiv.className = 'task-cycle';
@@ -448,7 +486,6 @@ function renderTaskList(taskArray, container, status) {
             actionsRow.appendChild(cycleDiv);
         }
         
-        // Кнопки действий
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'task-actions';
         
@@ -506,57 +543,48 @@ function renderTaskList(taskArray, container, status) {
     });
 }
 
-// ГЛАВНАЯ ФУНКЦИЯ ПЕРЕМЕЩЕНИЯ - С АВТОМАТИЧЕСКИМ НАЗНАЧЕНИЕМ
 function moveTask(taskId, from, to) {
     const idx = tasks[from].findIndex(t => t.id === taskId);
     if (idx === -1) return false;
     const task = tasks[from][idx];
     
-    // Проверка WIP лимита при перемещении в In Progress
     if (to === 'inprogress' && tasks.inprogress.length >= wipLimitInProgress) {
         showWarning(`Лимит In Progress: ${wipLimitInProgress}. Невозможно добавить задачу!`);
         return false;
     }
     
-    // При перемещении в In Progress
     if (to === 'inprogress' && !task.startTime) {
-        // Запускаем таймер
         task.startTime = Date.now();
         
-        // Запускаем общий таймер проекта, если ещё не запущен
         if (!isTimerRunning && !isProjectCompleted && totalStartTime === null) {
             isTimerRunning = true;
             totalStartTime = Date.now();
-            showGlobalMessage('⏱️ Таймер проекта запущен!', '#4caf50');
+            showGlobalMessage('⏱️ Таймер проекта запущен!', getNotificationColor());
         }
         
-        // АВТОМАТИЧЕСКОЕ НАЗНАЧЕНИЕ ОБУЧАЮЩЕГОСЯ
         if (task.student === null) {
             const randomStudent = getRandomStudent();
             if (randomStudent) {
                 task.student = randomStudent;
-                showGlobalMessage(`👨‍🎓 На задачу "${task.text.substring(0, 35)}..." автоматически назначен ${randomStudent}`, '#4caf50');
+                showGlobalMessage(`👨‍🎓 На задачу "${task.text.substring(0, 35)}..." автоматически назначен ${randomStudent}`, getNotificationColor());
             }
         }
     }
     
-    // При перемещении в Done - фиксируем время выполнения
     if (to === 'done' && task.startTime && !task.cycleTime) {
         task.cycleTime = Date.now() - task.startTime;
         completedTasksTimes.push(task.cycleTime);
         showGlobalMessage(`✅ Задача "${task.text.substring(0, 30)}..." выполнена за ${formatTimeMinutes(task.cycleTime)}!`, '#4caf50');
     }
     
-    // Выполняем перемещение
     tasks[from].splice(idx, 1);
     tasks[to].push(task);
     
-    // Проверяем, все ли задачи выполнены
     if (areAllTasksCompleted() && isTimerRunning) {
         isTimerRunning = false;
         isProjectCompleted = true;
         finalTotalTime = Date.now() - totalStartTime;
-        showGlobalMessage(`🏆 Проект завершён! Общее время: ${formatTimeMinutes(finalTotalTime)}`, '#4caf50');
+        showGlobalMessage(`🏆 Проект завершён! Общее время: ${formatTimeMinutes(finalTotalTime)}`, getNotificationColor());
     }
     
     renderBoard();
@@ -625,8 +653,13 @@ function init() {
     resetTimers();
     updateStudentsListDisplay();
     renderBoard();
+    initTheme();
     
-    // Кнопка добавления для To Do
+    const themeBtn = document.getElementById('themeToggleBtn');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', toggleTheme);
+    }
+    
     const addBtn = document.querySelector('.add-btn');
     const todoInput = document.getElementById('todoInput');
     if (addBtn && todoInput) {
@@ -644,7 +677,6 @@ function init() {
         };
     }
     
-    // WIP лимит
     const setWipBtn = document.querySelector('.set-wip-btn');
     const wipInput = document.querySelector('.wip-limit-input');
     if (setWipBtn && wipInput) {
@@ -657,7 +689,6 @@ function init() {
     }
     updateWipDisplay();
     
-    // Панели импорта
     const toggleImport = document.getElementById('toggleImportBtn');
     const importContent = document.getElementById('importContent');
     if (toggleImport && importContent) {
@@ -678,11 +709,9 @@ function init() {
         };
     }
     
-    // Кнопки импорта задач
     document.getElementById('pasteImportBtn')?.addEventListener('click', () => importFromTextarea('tasks'));
     document.getElementById('excelFileInput')?.addEventListener('change', e => { if(e.target.files[0]) handleFileUpload(e.target.files[0], 'tasks'); e.target.value = ''; });
     
-    // Кнопка очистки задач (без подтверждения)
     const clearTasksBtn = document.getElementById('clearTasksBtn');
     if (clearTasksBtn) {
         clearTasksBtn.addEventListener('click', () => {
@@ -690,20 +719,19 @@ function init() {
         });
     }
     
-    // Кнопки импорта обучающихся
     document.getElementById('studentsImportBtn')?.addEventListener('click', () => importFromTextarea('students'));
     document.getElementById('studentsFileInput')?.addEventListener('change', e => { if(e.target.files[0]) handleFileUpload(e.target.files[0], 'students'); e.target.value = ''; });
     
-    // Кнопка очистки списка обучающихся (без подтверждения)
     document.getElementById('clearStudentsBtn')?.addEventListener('click', () => { 
         students = []; 
         updateStudentsListDisplay(); 
         saveAllData(); 
-        showGlobalMessage('Список обучающихся очищен!', '#c44569');
+        showGlobalMessage('Список обучающихся очищен!', getNotificationColor());
     });
     
     console.log('✅ Канбан-доска готова!');
     console.log('📌 При перемещении задачи в In Progress автоматически назначается случайный обучающийся');
+    console.log('🎨 Доступны две темы: розовая и фиолетовая');
 }
 
 window.clearAllData = clearAllData;
