@@ -2,7 +2,9 @@
 const STORAGE_KEYS = {
     TASKS: 'kanban_tasks',
     STUDENTS: 'kanban_students',
-    THEME: 'kanban_theme'
+    THEME: 'kanban_theme',
+    GOOGLE_API_KEY: 'google_api_key',
+    GOOGLE_SHEET_ID: 'google_sheet_id'
 };
 
 // Хранилище WIP лимитов (только для In Progress)
@@ -85,6 +87,8 @@ function clearAllData() {
     localStorage.removeItem(STORAGE_KEYS.TASKS);
     localStorage.removeItem(STORAGE_KEYS.STUDENTS);
     localStorage.removeItem(STORAGE_KEYS.THEME);
+    localStorage.removeItem(STORAGE_KEYS.GOOGLE_API_KEY);
+    localStorage.removeItem(STORAGE_KEYS.GOOGLE_SHEET_ID);
     location.reload();
 }
 
@@ -119,7 +123,6 @@ function toggleTheme() {
     }
 }
 
-// Функция для получения цвета уведомления в зависимости от темы
 function getNotificationColor() {
     if (document.body.classList.contains('purple-theme')) {
         return '#a855f7';
@@ -200,6 +203,10 @@ function formatTimeMinutes(ms) {
     return `${minutes} мин ${seconds} сек`;
 }
 
+function formatTimeSeconds(ms) {
+    return Math.floor(ms / 1000);
+}
+
 function updateStudentsListDisplay() {
     const container = document.getElementById('studentsList');
     if (container) {
@@ -229,7 +236,6 @@ function showGlobalMessage(message, color) {
         document.body.appendChild(msgDiv);
     }
     
-    // Если цвет не передан, определяем по теме
     const finalColor = color || getNotificationColor();
     
     msgDiv.style.cssText = `
@@ -385,6 +391,135 @@ function importFromTextarea(type = 'tasks') {
     textarea.value = '';
 }
 
+// ========== GOOGLE SHEETS ИНТЕГРАЦИЯ ==========
+
+function saveGoogleSettings() {
+    const apiKey = document.getElementById('apiKeyInput')?.value;
+    const sheetId = document.getElementById('sheetIdInput')?.value;
+    
+    if (apiKey) localStorage.setItem(STORAGE_KEYS.GOOGLE_API_KEY, apiKey);
+    if (sheetId) localStorage.setItem(STORAGE_KEYS.GOOGLE_SHEET_ID, sheetId);
+    
+    showGlobalMessage('✅ Настройки Google Sheets сохранены!', getNotificationColor());
+}
+
+function loadGoogleSettings() {
+    const savedApiKey = localStorage.getItem(STORAGE_KEYS.GOOGLE_API_KEY);
+    const savedSheetId = localStorage.getItem(STORAGE_KEYS.GOOGLE_SHEET_ID);
+    
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const sheetIdInput = document.getElementById('sheetIdInput');
+    
+    if (apiKeyInput && savedApiKey) apiKeyInput.value = savedApiKey;
+    if (sheetIdInput && savedSheetId) sheetIdInput.value = savedSheetId;
+}
+
+async function importFromGoogleSheets() {
+    const apiKey = localStorage.getItem(STORAGE_KEYS.GOOGLE_API_KEY);
+    const sheetId = localStorage.getItem(STORAGE_KEYS.GOOGLE_SHEET_ID);
+    
+    if (!apiKey || !sheetId) {
+        showGlobalMessage('❌ Сначала сохраните API ключ и ID таблицы!', getNotificationColor());
+        return;
+    }
+    
+    showGlobalMessage('🔄 Загрузка задач из Google Sheets...', getNotificationColor());
+    
+    try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Лист1!A:A?key=${apiKey}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.error) {
+            showGlobalMessage(`❌ Ошибка API: ${data.error.message}`, '#c44569');
+            return;
+        }
+        
+        if (!data.values || data.values.length <= 1) {
+            showGlobalMessage('❌ В таблице нет задач! Первая строка должна содержать заголовок "Задача"', '#c44569');
+            return;
+        }
+        
+        const tasksList = [];
+        for (let i = 1; i < data.values.length; i++) {
+            const taskName = data.values[i][0];
+            if (taskName && taskName.trim()) {
+                tasksList.push(taskName.trim());
+            }
+        }
+        
+        if (tasksList.length === 0) {
+            showGlobalMessage('❌ Не найдено задач для импорта!', '#c44569');
+            return;
+        }
+        
+        importTasksToTodo(tasksList);
+        showGlobalMessage(`✅ Импортировано ${tasksList.length} задач из Google Sheets!`, '#4caf50');
+        
+    } catch (error) {
+        console.error('Ошибка импорта:', error);
+        showGlobalMessage('❌ Ошибка импорта! Проверьте API ключ и ID таблицы, а также доступ к таблице.', '#c44569');
+    }
+}
+
+function exportToGoogleSheets() {
+    const allTasks = [...tasks.todo, ...tasks.inprogress, ...tasks.done];
+    const totalTasks = allTasks.length;
+    const completedTasks = tasks.done.length;
+    const totalTime = isTimerRunning ? (Date.now() - totalStartTime) : (finalTotalTime || 0);
+    const avgCycleTime = completedTasksTimes.length > 0 
+        ? completedTasksTimes.reduce((a, b) => a + b, 0) / completedTasksTimes.length 
+        : 0;
+    
+    const exportData = [
+        ['Статистика проекта'],
+        ['Общее время работы', formatTimeMinutes(totalTime)],
+        ['Общее время (секунды)', formatTimeSeconds(totalTime)],
+        ['Средний Cycle Time', formatTimeMinutes(avgCycleTime)],
+        ['Средний Cycle Time (секунды)', formatTimeSeconds(avgCycleTime)],
+        ['Всего задач', totalTasks],
+        ['Выполнено задач', completedTasks],
+        ['Осталось задач', tasks.todo.length + tasks.inprogress.length],
+        [],
+        ['Детали задач'],
+        ['Задача', 'Статус', 'Время выполнения (сек)', 'Время выполнения']
+    ];
+    
+    for (let task of allTasks) {
+        let status = '';
+        if (tasks.done.includes(task)) status = 'Готово';
+        else if (tasks.inprogress.includes(task)) status = 'В работе';
+        else status = 'Ожидает';
+        
+        let cycleTimeSec = '';
+        let cycleTimeFormatted = '';
+        if (task.cycleTime) {
+            cycleTimeSec = formatTimeSeconds(task.cycleTime);
+            cycleTimeFormatted = formatTimeMinutes(task.cycleTime);
+        }
+        
+        exportData.push([task.text, status, cycleTimeSec, cycleTimeFormatted]);
+    }
+    
+    const csvRows = [];
+    for (const row of exportData) {
+        csvRows.push(row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','));
+    }
+    const csvContent = csvRows.join('\n');
+    
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute('download', `kanban_results_${new Date().toISOString().slice(0, 19)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showGlobalMessage('📥 CSV файл с результатами скачан! Вы можете импортировать его в Google Sheets (Файл → Импортировать).', '#4caf50');
+}
+
 // ========== КАНБАН ==========
 
 function setWipLimit(column, newLimit) {
@@ -431,7 +566,6 @@ function renderTaskList(taskArray, container, status) {
     if (!taskArray.length) {
         const empty = document.createElement('div');
         empty.textContent = '✨ Нет задач';
-        empty.style.cssText = 'color:#c4b5fd; text-align:center; padding:20px 0; font-size:0.8rem';
         container.appendChild(empty);
         return;
     }
@@ -654,8 +788,9 @@ function init() {
     updateStudentsListDisplay();
     renderBoard();
     initTheme();
+    loadGoogleSettings();
     
-    const themeBtn = document.getElementById('themeToggleBtn');
+       const themeBtn = document.getElementById('themeToggleBtn');
     if (themeBtn) {
         themeBtn.addEventListener('click', toggleTheme);
     }
@@ -689,6 +824,26 @@ function init() {
     }
     updateWipDisplay();
     
+    // Панель Google Sheets
+    const toggleGoogle = document.getElementById('toggleGoogleBtn');
+    const googleContent = document.getElementById('googleContent');
+    if (toggleGoogle && googleContent) {
+        toggleGoogle.onclick = () => {
+            const isHidden = googleContent.style.display === 'none';
+            googleContent.style.display = isHidden ? 'block' : 'none';
+            toggleGoogle.innerHTML = isHidden ? '▲ Скрыть' : '▼ Показать';
+        };
+    }
+    
+    const saveGoogleBtn = document.getElementById('saveGoogleSettingsBtn');
+    const importGoogleBtn = document.getElementById('importFromGoogleBtn');
+    const exportGoogleBtn = document.getElementById('exportToGoogleBtn');
+    
+    if (saveGoogleBtn) saveGoogleBtn.addEventListener('click', saveGoogleSettings);
+    if (importGoogleBtn) importGoogleBtn.addEventListener('click', importFromGoogleSheets);
+    if (exportGoogleBtn) exportGoogleBtn.addEventListener('click', exportToGoogleSheets);
+    
+    // Панели импорта
     const toggleImport = document.getElementById('toggleImportBtn');
     const importContent = document.getElementById('importContent');
     if (toggleImport && importContent) {
@@ -709,8 +864,16 @@ function init() {
         };
     }
     
-    document.getElementById('pasteImportBtn')?.addEventListener('click', () => importFromTextarea('tasks'));
-    document.getElementById('excelFileInput')?.addEventListener('change', e => { if(e.target.files[0]) handleFileUpload(e.target.files[0], 'tasks'); e.target.value = ''; });
+    const pasteImportBtn = document.getElementById('pasteImportBtn');
+    if (pasteImportBtn) pasteImportBtn.addEventListener('click', () => importFromTextarea('tasks'));
+    
+    const excelFileInput = document.getElementById('excelFileInput');
+    if (excelFileInput) {
+        excelFileInput.addEventListener('change', e => { 
+            if (e.target.files[0]) handleFileUpload(e.target.files[0], 'tasks'); 
+            e.target.value = ''; 
+        });
+    }
     
     const clearTasksBtn = document.getElementById('clearTasksBtn');
     if (clearTasksBtn) {
@@ -719,19 +882,31 @@ function init() {
         });
     }
     
-    document.getElementById('studentsImportBtn')?.addEventListener('click', () => importFromTextarea('students'));
-    document.getElementById('studentsFileInput')?.addEventListener('change', e => { if(e.target.files[0]) handleFileUpload(e.target.files[0], 'students'); e.target.value = ''; });
+    const studentsImportBtn = document.getElementById('studentsImportBtn');
+    if (studentsImportBtn) studentsImportBtn.addEventListener('click', () => importFromTextarea('students'));
     
-    document.getElementById('clearStudentsBtn')?.addEventListener('click', () => { 
-        students = []; 
-        updateStudentsListDisplay(); 
-        saveAllData(); 
-        showGlobalMessage('Список обучающихся очищен!', getNotificationColor());
-    });
+    const studentsFileInput = document.getElementById('studentsFileInput');
+    if (studentsFileInput) {
+        studentsFileInput.addEventListener('change', e => { 
+            if (e.target.files[0]) handleFileUpload(e.target.files[0], 'students'); 
+            e.target.value = ''; 
+        });
+    }
+    
+    const clearStudentsBtn = document.getElementById('clearStudentsBtn');
+    if (clearStudentsBtn) {
+        clearStudentsBtn.addEventListener('click', () => { 
+            students = []; 
+            updateStudentsListDisplay(); 
+            saveAllData(); 
+            showGlobalMessage('Список обучающихся очищен!', getNotificationColor());
+        });
+    }
     
     console.log('✅ Канбан-доска готова!');
     console.log('📌 При перемещении задачи в In Progress автоматически назначается случайный обучающийся');
     console.log('🎨 Доступны две темы: розовая и фиолетовая');
+    console.log('📊 Для импорта из Google Sheets: введите API ключ и ID таблицы');
 }
 
 window.clearAllData = clearAllData;

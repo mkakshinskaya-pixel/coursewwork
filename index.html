@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Канбан доска | Pick me Сердечки </title>
+    <title>Канбан доска | Pick me Сердечки</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,10 +11,10 @@
         <div class="game-header">
             <div class="title-section">
                 <h1>🎀 Pick me Сердечки · Канбан-доска</h1>
-                <p>Проверка сердечек | Назначение обучающихся на задачки</p>
+                <p>Проверка сердечек | Kanban</p>
             </div>
             <div class="header-right">
-                <button id="themeToggleBtn" class="theme-toggle-btn">🌙 Фиолетовая тема</button>
+                <button id="themeToggleBtn" class="theme-toggle-btn">🟣 Фиолетовая тема</button>
                 <div class="stats-badge" id="globalStats">
                     To Do <span id="todoCount">0</span> | In Progress <span id="inprogCount">0</span> | Done <span id="doneCount">0</span>
                 </div>
@@ -29,7 +29,7 @@
                 <div class="timer-sub">С момента первой задачи в колонке</div>
             </div>
             <div class="timer-card">
-                <div class="timer-label">🔄 Cycle Time (среднее)</div>
+                <div class="timer-label">🔄 Среднее время</div>
                 <div class="timer-value" id="cycleTimeDisplay">0 мин 0 сек</div>
                 <div class="timer-sub">Среднее время выполнения задачи</div>
             </div>
@@ -83,10 +83,10 @@
             </div>
         </div>
 
-        <!-- Панель импорта задач -->
+        <!-- Панель импорта задач (CSV/Excel) -->
         <div class="import-panel">
             <div class="import-header">
-                <span>📥 Импорт задач из Excel / Google Sheets</span>
+                <span>📥 Импорт задач из Excel / CSV</span>
                 <button id="toggleImportBtn" class="toggle-import-btn">▼ Показать</button>
             </div>
             <div id="importContent" class="import-content" style="display: none;">
@@ -147,6 +147,37 @@
                             <div id="studentsList" class="students-list"></div>
                             <button id="clearStudentsBtn" class="import-btn secondary btn-bottom">🗑 Очистить список</button>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Панель Google Sheets (в самом низу) -->
+        <div class="import-panel google-sheets-panel">
+            <div class="import-header">
+                <span>📊 Google Sheets интеграция</span>
+                <button id="toggleGoogleBtn" class="toggle-import-btn">▼ Показать</button>
+            </div>
+            <div id="googleContent" class="import-content" style="display: none;">
+                <div class="import-methods">
+                    <div class="import-method">
+                        <h4>🔑 Настройка API</h4>
+                        <input type="text" id="apiKeyInput" placeholder="Введите API ключ" style="width: 100%; padding: 8px; border-radius: 12px; border: 1px solid #c4b5fd; margin-bottom: 8px;">
+                        <input type="text" id="sheetIdInput" placeholder="ID Google таблицы" style="width: 100%; padding: 8px; border-radius: 12px; border: 1px solid #c4b5fd;">
+                        <p class="import-hint">Как получить ID: из ссылки docs.google.com/spreadsheets/d/<b>ЭТОТ_ID</b>/edit</p>
+                        <button id="saveGoogleSettingsBtn" class="import-btn secondary">💾 Сохранить настройки</button>
+                    </div>
+                    
+                    <div class="import-method">
+                        <h4>📥 Импорт задач</h4>
+                        <p class="import-hint">Загрузит задачи из столбца A (начиная с 2 строки)</p>
+                        <button id="importFromGoogleBtn" class="import-btn">📥 Импорт из Google Sheets</button>
+                    </div>
+                    
+                    <div class="import-method">
+                        <h4>📤 Экспорт результатов</h4>
+                        <p class="import-hint">Скачает CSV файл со статистикой проекта</p>
+                        <button id="exportToGoogleBtn" class="import-btn secondary">📤 Экспорт в CSV</button>
                     </div>
                 </div>
             </div>

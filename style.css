@@ -273,9 +273,8 @@ body:not(.purple-theme) .toggle-import-btn:hover {
     background: #f06292;
 }
 
-/* Розовая тема - пустой список задач */
 body:not(.purple-theme) .task-list > div {
-    color: #f8bbd0 !important;
+    color: #f8bbd0;
 }
 
 /* ========== ФИОЛЕТОВАЯ ТЕМА ========== */
@@ -537,7 +536,6 @@ body.purple-theme .toggle-import-btn:hover {
     background: #7c3aed;
 }
 
-/* Фиолетовая тема - пустой список задач */
 body.purple-theme .task-list > div {
     color: #c4b5fd;
 }
@@ -742,7 +740,6 @@ body.purple-theme .task-list > div {
     transition: all 0.1s;
 }
 
-/* Стили для пустого списка задач */
 .task-list > div {
     font-size: 0.8rem;
     text-align: center;
