@@ -34,21 +34,21 @@ body:not(.purple-theme) .title-section h1 {
 
 body:not(.purple-theme) .title-section p {
     color: #b76e79;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
 }
 
 body:not(.purple-theme) .stats-badge {
     background: #ffffffcc;
     border: 1px solid #f8bbd0;
     color: #c44569;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     padding: 0.6rem 1.5rem;
 }
 
 body:not(.purple-theme) .stats-badge span {
     color: #e91e63;
     font-weight: 700;
-    font-size: 1.3rem;
+    font-size: 1.4rem;
 }
 
 body:not(.purple-theme) .timer-card {
@@ -58,18 +58,18 @@ body:not(.purple-theme) .timer-card {
 
 body:not(.purple-theme) .timer-label {
     color: #b76e79;
-    font-size: 1rem;
+    font-size: 1.5rem;
 }
 
 body:not(.purple-theme) .timer-value {
     color: #e91e63;
-    font-size: 2.8rem;
+    font-size: 3rem;
     font-weight: 700;
 }
 
 body:not(.purple-theme) .timer-sub {
     color: #c44569;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
 }
 
 body:not(.purple-theme) .column {
@@ -113,21 +113,21 @@ body:not(.purple-theme) .inprogress .task-count {
 
 body:not(.purple-theme) .todo .column-title { 
     color: #f7a1b5; 
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 body:not(.purple-theme) .inprogress .column-title { 
     color: #e84393; 
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 body:not(.purple-theme) .done .column-title { 
     color: #c44569; 
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 
 body:not(.purple-theme) .task-count {
     background: #fce4ec;
     color: #c44569;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     padding: 4px 10px;
     border-radius: 30px;
     font-weight: 600;
@@ -149,20 +149,20 @@ body:not(.purple-theme) .task-text-wrapper {
 
 body:not(.purple-theme) .task-text {
     color: #2c1a24;
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     font-weight: 700;
 }
 
 body:not(.purple-theme) .student-name {
     color: #e91e63;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
 }
 
 body:not(.purple-theme) .random-student-btn {
     background: #f48fb1;
     color: white;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     padding: 6px 14px;
     border: none;
     border-radius: 20px;
@@ -180,7 +180,7 @@ body:not(.purple-theme) .task-timer {
     background: #ffffff;
     border: 1px solid #fce4ec;
     color: #e91e63;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     padding: 5px 10px;
     border-radius: 20px;
     display: inline-flex;
@@ -192,7 +192,7 @@ body:not(.purple-theme) .task-timer {
 body:not(.purple-theme) .move-btn {
     background: #fce4ec;
     color: #c44569;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     padding: 6px 14px;
     border: none;
     border-radius: 20px;
@@ -261,7 +261,7 @@ body:not(.purple-theme) .import-panel {
 body:not(.purple-theme) .import-header {
     background: #fce4ec;
     color: #c44569;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     padding: 14px 18px;
     display: flex;
     justify-content: space-between;
@@ -283,7 +283,7 @@ body:not(.purple-theme) .import-method {
 
 body:not(.purple-theme) .import-method h4 {
     color: #e91e63;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     margin-bottom: 0.8rem;
 }
 
@@ -309,7 +309,7 @@ body:not(.purple-theme) .clear-tasks-info {
 
 body:not(.purple-theme) .clear-tasks-info p:first-child {
     color: #c44569;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     margin-bottom: 8px;
 }
 
@@ -331,7 +331,7 @@ body:not(.purple-theme) .student-tag {
 body:not(.purple-theme) footer {
     color: #f48fb1;
     border-top: 1px solid #f8bbd0;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     padding-top: 1rem;
     margin-top: 1.5rem;
     text-align: center;
@@ -349,16 +349,16 @@ body:not(.purple-theme) .wip-control {
 
 body:not(.purple-theme) .wip-control span {
     color: #c44569;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 body:not(.purple-theme) .wip-limit-input {
     background: #fff5f7;
     border: 1px solid #f8bbd0;
     color: #c44569;
-    font-size: 1rem;
+    font-size: 0.95rem;
     padding: 5px 8px;
-    width: 65px;
+    width: 70px;
     border-radius: 20px;
     text-align: center;
     font-weight: 600;
@@ -473,7 +473,7 @@ body:not(.purple-theme) .task-cycle {
 body:not(.purple-theme) .toggle-import-btn {
     background: #f48fb1;
     color: white;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     padding: 5px 14px;
     border: none;
     border-radius: 20px;
@@ -492,7 +492,7 @@ body:not(.purple-theme) .task-list {
 
 body:not(.purple-theme) .task-list > div {
     color: #f8bbd0;
-    font-size: 1.1rem;
+    font-size: 1.5rem;
     text-align: center;
     padding: 25px 0;
 }
@@ -541,20 +541,20 @@ body.purple-theme .title-section h1 {
 
 body.purple-theme .title-section p {
     color: #8b5cf6;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
 }
 
 body.purple-theme .stats-badge {
     background: #f3e8ffcc;
     border: 1px solid #c4b5fd;
     color: #7c3aed;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     padding: 0.6rem 1.5rem;
 }
 
 body.purple-theme .stats-badge span {
     color: #a855f7;
-    font-size: 1.3rem;
+    font-size: 1.4rem;
 }
 
 body.purple-theme .timer-card {
@@ -564,17 +564,17 @@ body.purple-theme .timer-card {
 
 body.purple-theme .timer-label {
     color: #8b5cf6;
-    font-size: 1rem;
+    font-size: 1.5rem;
 }
 
 body.purple-theme .timer-value {
     color: #7c3aed;
-    font-size: 2.8rem;
+    font-size: 3rem;
 }
 
 body.purple-theme .timer-sub {
     color: #a855f7;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
 }
 
 body.purple-theme .column {
@@ -617,21 +617,21 @@ body.purple-theme .inprogress .task-count {
 
 body.purple-theme .todo .column-title { 
     color: #c084fc; 
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 body.purple-theme .inprogress .column-title { 
     color: #a855f7; 
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 body.purple-theme .done .column-title { 
     color: #7c3aed; 
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 
 body.purple-theme .task-count {
     background: #ede9fe;
     color: #7c3aed;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     padding: 4px 10px;
     border-radius: 30px;
     font-weight: 600;
@@ -653,20 +653,20 @@ body.purple-theme .task-text-wrapper {
 
 body.purple-theme .task-text {
     color: #2c1a24;
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     font-weight: 700;
 }
 
 body.purple-theme .student-name {
     color: #7c3aed;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
 }
 
 body.purple-theme .random-student-btn {
     background: #a855f7;
     color: white;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     padding: 6px 14px;
     border: none;
     border-radius: 20px;
@@ -683,7 +683,7 @@ body.purple-theme .task-timer {
     background: #ffffff;
     border: 1px solid #c4b5fd;
     color: #7c3aed;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     padding: 5px 10px;
     border-radius: 20px;
     display: inline-flex;
@@ -695,7 +695,7 @@ body.purple-theme .task-timer {
 body.purple-theme .move-btn {
     background: #ede9fe;
     color: #7c3aed;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     padding: 6px 14px;
     border: none;
     border-radius: 20px;
@@ -761,7 +761,7 @@ body.purple-theme .import-panel {
 body.purple-theme .import-header {
     background: #ede9fe;
     color: #7c3aed;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     padding: 14px 18px;
     display: flex;
     justify-content: space-between;
@@ -783,7 +783,7 @@ body.purple-theme .import-method {
 
 body.purple-theme .import-method h4 {
     color: #7c3aed;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     margin-bottom: 0.8rem;
 }
 
@@ -809,7 +809,7 @@ body.purple-theme .clear-tasks-info {
 
 body.purple-theme .clear-tasks-info p:first-child {
     color: #7c3aed;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     margin-bottom: 8px;
 }
 
@@ -831,7 +831,7 @@ body.purple-theme .student-tag {
 body.purple-theme footer {
     color: #a855f7;
     border-top: 1px solid #c4b5fd;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     padding-top: 1rem;
     margin-top: 1.5rem;
     text-align: center;
@@ -849,16 +849,16 @@ body.purple-theme .wip-control {
 
 body.purple-theme .wip-control span {
     color: #7c3aed;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 body.purple-theme .wip-limit-input {
     background: #f3e8ff;
     border: 1px solid #c4b5fd;
     color: #7c3aed;
-    font-size: 1rem;
+    font-size: 0.95rem;
     padding: 5px 8px;
-    width: 65px;
+    width: 70px;
     border-radius: 20px;
     text-align: center;
     font-weight: 600;
@@ -973,7 +973,7 @@ body.purple-theme .task-cycle {
 body.purple-theme .toggle-import-btn {
     background: #a855f7;
     color: white;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     padding: 5px 14px;
     border: none;
     border-radius: 20px;
@@ -992,7 +992,7 @@ body.purple-theme .task-list {
 
 body.purple-theme .task-list > div {
     color: #c4b5fd;
-    font-size: 1.1rem;
+    font-size: 1.5rem;
     text-align: center;
     padding: 25px 0;
 }
@@ -1021,7 +1021,7 @@ body.purple-theme .done .add-task-panel {
     display: none;
 }
 
-/* ========== ОБЩИЕ СТИЛИ ДЛЯ ВСЕХ ЭЛЕМЕНТОВ ========== */
+/* ========== ОБЩИЕ СТИЛИ ========== */
 .kanban-container {
     max-width: 1600px;
     width: 100%;
@@ -1251,7 +1251,7 @@ body.purple-theme .done .task-card { border-left-color: #7c3aed; }
     .import-methods { flex-direction: column; }
     .header-right { flex-direction: column; align-items: flex-start; }
     .title-section h1 { font-size: 1.6rem; }
-    .column-title { font-size: 1.5rem; }
-    .task-text { font-size: 1.1rem; }
+    .column-title { font-size: 1.2rem; }
+    .task-text { font-size: 1rem; }
     .inprogress .column-header { flex-wrap: wrap; }
 }
